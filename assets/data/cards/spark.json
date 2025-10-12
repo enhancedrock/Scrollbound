@@ -1,0 +1,15 @@
+{
+    "name": "Spark",
+    "description": "Deals 8 damage and electrifies one target",
+    "tp": 1,
+    "damage": [
+        "8"
+    ],
+    "effects": [
+        {
+            "type": "ELECTRIFIED",
+            "duration": 2,
+            "color": "A45EE9"
+        }
+    ]
+}
