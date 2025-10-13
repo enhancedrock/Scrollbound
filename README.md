@@ -23,6 +23,6 @@ every 5 levels you'll encounter a scroll shop, every 10 you'll encounter a vouch
 
 the game automatically saves your run every floor, so you can quit by simply Control+C'ing or closing your terminal, and pick back up where you left off whenever
 
-## wowie
+## wowie
 this is another game by me, on behalf of rockbox studios.
 i made it for week 6 of hackclub's siege! you should check them out, they do regular, amazing events for young hackers 18 and under with plenty of prizes ;3
