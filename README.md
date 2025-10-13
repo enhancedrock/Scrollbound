@@ -8,7 +8,8 @@ a small roguelike game about descending a dungeon, collecting spell cards and sc
 </p>
 
 ## how 2 get
-you can play the game locally by cloning the repo (or setting up a codespace by clicking `Code` -> `Codespaces` -> `Create codespace on main`), setting a up virtual environment, and installing rich and rich_menu
+you can play the game locally by cloning the repo (or setting up a codespace by clicking `Code` -> `Codespaces` -> `Create codespace on main`), setting a up virtual environment, installing rich and rich_menu, then running \_\_main\_\_.py
+
 the game was made with python 3.10, so bear that in mind
 
 depending on how much replit has changed since i last used it, i may create a replit demo and drop a link here
