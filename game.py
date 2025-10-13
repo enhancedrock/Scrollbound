@@ -12,6 +12,7 @@ CARDS: List[Dict[str, Any]] = []
 SCROLLS: List[Dict[str, Any]] = []
 ENEMIES: List[Dict[str, Any]] = []
 SAVE = {}
+SAVE_PATH = ""
 
 with open("cards.json", "r", encoding="utf-8") as cards_json:
     CARDS = json.load(cards_json)
@@ -22,9 +23,140 @@ with open("enemies.json", "r", encoding="utf-8") as enemies_json:
 
 console = Console()
 
+def save_game(savepath: str):
+    """Save the current game state"""
+    # no shit sherlock
+    with open(savepath, "w", encoding="utf-8") as savefile:
+        json.dump(SAVE, savefile, indent=2)
+
+def scroll_shop():
+    """Shop that appears every 5 floors - sells 3 random scrolls"""
+    console.print("=== SCROLL SHOP ===", style="bold yellow")
+    console.print(f"Gold: {SAVE.get('gold', 0)}", style="yellow")
+    
+    # grab 3 random scrolls
+    sample_size = min(3, len(SCROLLS))
+    scroll_options = random.sample(SCROLLS, k=sample_size)
+    
+    while True:
+        # cum
+        result = os.system('cls' if os.name == 'nt' else 'clear')
+        if result != 0:
+            console.clear()
+        
+        console.print("=== SCROLL SHOP ===", style="bold yellow")
+        console.print(f"Gold: {SAVE.get('gold', 0)}", style="yellow")
+        console.print()
+        
+        # here, good sir, pick one
+        for i, scroll in enumerate(scroll_options, 1):
+            string = f"{i}. "
+            string += f"[bold blue]{scroll.get('name')}[/bold blue]\n"
+            string += f"   [bright_black]{scroll.get('description')}[/bright_black]\n"
+            string += f"   [yellow]{scroll.get('tp')}TP - Cost: {scroll.get('cost', 0)} gold[/yellow]"
+            console.print(string)
+        
+        console.print()
+        
+        # create le menu
+        menu_options = [str(i) for i in range(1, len(scroll_options) + 1)]
+        menu_options.append("Leave Shop")
+        
+        shop_menu = Menu(
+            *menu_options,
+            title="What would you like to buy?",
+            color="bold yellow",
+            highlight_color="bold white"
+        )
+        
+        choice = shop_menu.ask(screen=False, esc=False)
+        
+        if choice == "Leave Shop":
+            break
+        
+        # buy scroll? please? im poor
+        scroll_index = int(choice) - 1
+        chosen_scroll = scroll_options[scroll_index]
+        cost = chosen_scroll.get('cost', 0)
+        
+        if SAVE.get('gold', 0) >= cost:
+            SAVE['gold'] -= cost
+            SAVE['hand'].append(copy.deepcopy(chosen_scroll))
+            console.print(f"Purchased {chosen_scroll.get('name')}!", style="bold green")
+            scroll_options.pop(scroll_index)  # WOOHOO
+            if not scroll_options:  # oh it's all gone, thanks i guess?
+                console.print("The shop is sold out!", style="bold yellow")
+                Prompt.ask("Press Enter to continue...")
+                break
+            Prompt.ask("Press Enter to continue...")
+        else:
+            console.print("Not enough gold!", style="bold red")
+            Prompt.ask("Press Enter to continue...")
+
+def voucher_shop():
+    """Shop that appears every 10 floors - sells vouchers"""
+    console.print("=== VOUCHER SHOP ===", style="bold magenta")
+    console.print(f"Gold: {SAVE.get('gold', 0)}", style="yellow")
+    
+    while True:
+        # cum
+        result = os.system('cls' if os.name == 'nt' else 'clear')
+        if result != 0:
+            console.clear()
+        
+        console.print("=== VOUCHER SHOP ===", style="bold magenta")
+        console.print(f"Gold: {SAVE.get('gold', 0)}", style="yellow")
+        console.print()
+        
+        # display vouchers
+        console.print("1. [bold red]TP Voucher[/bold red]")
+        console.print("   [bright_black]Permanently increases maximum TP by 1[/bright_black]")
+        console.print("   [yellow]Cost: 50 gold[/yellow]")
+        console.print()
+        
+        console.print("2. [bold green]HP Voucher[/bold green]")
+        console.print("   [bright_black]Permanently increases maximum HP by 3[/bright_black]")
+        console.print("   [yellow]Cost: 50 gold[/yellow]")
+        console.print()
+        
+        voucher_menu = Menu(
+            "1",
+            "2", 
+            "Leave Shop",
+            title="What would you like to buy?",
+            color="bold magenta",
+            highlight_color="bold white"
+        )
+        
+        choice = voucher_menu.ask(screen=False, esc=False)
+        
+        if choice == "Leave Shop":
+            break
+        elif choice == "1":  # TP Voucher
+            if SAVE.get('gold', 0) >= 50:
+                SAVE['gold'] -= 50
+                SAVE['max_tp'] = SAVE.get('max_tp', 2) + 1
+                SAVE['tp'] = SAVE.get('max_tp', 3)  # refill toilet paper
+                console.print("Purchased TP Voucher! Maximum TP increased by 1!", style="bold green")
+                Prompt.ask("Press Enter to continue...")
+            else:
+                console.print("Not enough gold!", style="bold red")
+                Prompt.ask("Press Enter to continue...")
+        elif choice == "2":  # HP Voucher  
+            if SAVE.get('gold', 0) >= 50:
+                SAVE['gold'] -= 50
+                SAVE['max_hp'] = SAVE.get('max_hp', 30) + 3
+                SAVE['hp'] = SAVE.get('max_hp', 33)  # refill HP
+                console.print("Purchased HP Voucher! Maximum HP increased by 3!", style="bold green")
+                Prompt.ask("Press Enter to continue...")
+            else:
+                console.print("Not enough gold!", style="bold red")
+                Prompt.ask("Press Enter to continue...")
+
 def entry(inputsavepath: str):
     """entry point for the game"""
-    global SAVE
+    global SAVE, SAVE_PATH
+    SAVE_PATH = inputsavepath
     savepath = inputsavepath
     if not os.path.exists(savepath):
         raise FileNotFoundError(f"Save file {savepath} does not exist.")
@@ -190,6 +322,123 @@ def build_effects(effects):
         finallist.append(effect_str)
     return "".join(finallist)
 
+def process_enemy_effects(enemies):
+    """Process ongoing effects on enemies"""
+    enemies_to_remove = []
+    
+    for enemy in enemies:
+        effects_to_remove = []
+        
+        for effect in enemy.get('effects', []):
+            if effect.get('type') == 'FIERY':
+                enemy['hp'] -= 5
+                console.print(f"{enemy.get('name')} takes 5 fire damage!", style="bold red")
+
+            if effect.get('type') == 'ELECTRIFIED':
+                has_wet = any(e.get('type') == 'WET' for e in enemy.get('effects', []))
+                if has_wet:
+                    enemy['hp'] -= 10
+                    console.print(f"{enemy.get('name')} takes 10 shock damage from being wet and electrified!", style="bold yellow")
+
+            # tick tock ho
+            if not effect.get('duration') == 0:
+                effect['duration'] -= 1
+            if effect.get('duration', 0) <= 0:
+                effects_to_remove.append(effect)
+        
+        # times up
+        for effect in effects_to_remove:
+            enemy['effects'].remove(effect)
+
+        # pfffft kablamo
+        if enemy.get('hp', 0) <= 0:
+            enemies_to_remove.append(enemy)
+            SAVE["gold"] += enemy.get("gold", 0)
+    
+    # pffft kablamo
+    for enemy in enemies_to_remove:
+        enemies.remove(enemy)
+
+def process_player_effects():
+    """Process ongoing effects on the player"""
+    if 'effects' not in SAVE:
+        SAVE['effects'] = []
+    
+    effects_to_remove = []
+    
+    for effect in SAVE.get('effects', []):
+        if effect.get('type') == 'FIERY':
+            SAVE['hp'] -= 5
+            console.print(f"You take 5 fire damage from burning!", style="bold red")
+        
+        elif effect.get('type') == 'POISON':
+            SAVE['hp'] -= 3
+            console.print(f"You take 3 poison damage!", style="bold green")
+        
+        elif effect.get('type') == 'ELECTRIFIED':
+            # bzzzzt
+            has_wet = any(e.get('type') == 'WET' for e in SAVE.get('effects', []))
+            if has_wet:
+                SAVE['hp'] -= 8
+                console.print(f"You take 8 shock damage from being wet and electrified!", style="bold yellow")
+        
+        elif effect.get('type') == 'SLIMY':
+            # ew
+            console.print(f"You feel slimy and gross!", style="bold green")
+        
+        # decrease duration
+        if not effect.get('duration') == 0:
+            effect['duration'] -= 1
+        if effect.get('duration', 0) <= 0:
+            effects_to_remove.append(effect)
+    
+    # remove expireds
+    for effect in effects_to_remove:
+        SAVE['effects'].remove(effect)
+        console.print(f"The {effect.get('type', 'unknown')} effect wears off!", style="bright_black")
+
+def process_enemy_attacks(enemies):
+    """Let enemies attack the player"""
+    for enemy in enemies:
+        # no attacks? megamind
+        attacks = enemy.get('attacks', [])
+        if not attacks:
+            continue
+        
+        # pick an attack
+        chosen_attack = random.choice(attacks)
+        attack_name = chosen_attack.get('name', 'Attack')
+        attack_damage = chosen_attack.get('damage', 0)
+        attack_effects = chosen_attack.get('effects', [])
+        
+        console.print(f"{enemy.get('name')} uses {attack_name}!", style="bold red")
+        
+        # pew pew
+        if attack_damage > 0:
+            SAVE['hp'] -= attack_damage
+            console.print(f"You take {attack_damage} damage!", style="bold red")
+        
+        # hisssss
+        if attack_effects:
+            if 'effects' not in SAVE:
+                SAVE['effects'] = []
+            for effect in attack_effects:
+                # aw man
+                existing_effect = None
+                for player_effect in SAVE['effects']:
+                    if player_effect.get('type') == effect.get('type'):
+                        existing_effect = player_effect
+                        break
+                
+                if existing_effect:
+                    # shiver me timbers
+                    existing_effect['duration'] = max(existing_effect.get('duration', 0), effect.get('duration', 0))
+                else:
+                    # haha
+                    SAVE['effects'].append(copy.deepcopy(effect))
+                
+                console.print(f"You are afflicted with {effect.get('type', 'unknown effect')}!", style="bold yellow")
+
 def descend():
     """Main game loop - handles floor progression and combat"""
     while True:
@@ -236,6 +485,44 @@ def descend():
             if chosen_card == "End Turn":
                 console.print("You end your turn.", style="bold white")
                 SAVE["tp"] = SAVE.get("max_tp", 2)
+                
+                # chopped
+                process_enemy_effects(enemies)
+                
+                # kablamo?
+                if len(enemies) == 0:
+                    console.print("You have defeated all enemies on this floor!", style="bold green")
+                    SAVE["floor"] += 1
+                    SAVE["tp"] = SAVE.get("max_tp", 2)
+                    
+                    # save game after each floor
+                    save_game(SAVE_PATH)
+                    
+                    # check for shops
+                    if SAVE["floor"] % 10 == 0:  # voucher shop every 10 floors
+                        voucher_shop()
+                        save_game(SAVE_PATH)  # save after shop
+                    elif SAVE["floor"] % 5 == 0:  # scroll shop every 5 floors (not 10)
+                        scroll_shop()
+                        save_game(SAVE_PATH)  # save after shop
+                    
+                    Prompt.ask("Press Enter to continue...")
+                    break # oh yeah bbg
+                
+                # enemies attack back!
+                process_enemy_attacks(enemies)
+                
+                # process player effects (poison, burn, etc.)
+                process_player_effects()
+                
+                # rip?
+                if SAVE.get('hp', 0) <= 0:
+                    console.print("You have been defeated!", style="bold red")
+                    console.print("Game Over!", style="bold red")
+                    Prompt.ask("Press Enter to continue...")
+                    return  # rip.
+                
+                Prompt.ask("Press Enter to continue...")
                 continue
 
             # get chosen card
@@ -251,43 +538,100 @@ def descend():
             SAVE["tp"] -= chosen_card.get("tp", 0)
             targets_remaining = chosen_card.get("targets", 1)
 
-            # pick targets
-            while targets_remaining > 0 and len(enemies) > 0:
-                enemy_picker_menu = Menu(
-                    *sorted(str(i + 1) for i in range(len(enemies))),
-                    title=f"Which enemy will you target? ({targets_remaining}/{chosen_card.get('targets', 1)})",
-                    color="bold red",
-                    highlight_color="bold white"
-                )
-                chosen_enemy = enemies[int(enemy_picker_menu.ask(screen=False, esc=False))-1]
+            # target 0 = nuke nuke! (starship troopers pinball ref)
+            if chosen_card.get("targets", 1) == 0:
+                enemies_to_remove = []
+                for chosen_enemy in enemies:
+                    # apply damage
+                    chosen_enemy['hp'] -= chosen_card.get("damage", 0)
 
-                # apply damage
-                chosen_enemy['hp'] -= chosen_card.get("damage", 0)
+                    # and effects
+                    if len(chosen_card.get("effects", [])) > 0:
+                        if not chosen_enemy.get('effects'):
+                            chosen_enemy['effects'] = []
+                        for effect in chosen_card.get("effects", []):
+                            if effect.get('type') == 'HEAL':
+                                SAVE['hp'] += 5
+                                effect['duration'] -= 1
+                                console.print("You healed 5HP!", style="green")
+                                if effect['duration'] != 0:
+                                    SAVE['effects'].append(effect)
+                            elif effect.get('type') == 'CLEANSE':
+                                console.print("You cleansed yourself, removing all effects!", style="green")
+                                SAVE['effects'] = []
+                            elif effect not in chosen_enemy['effects']:
+                                chosen_enemy['effects'].append(effect)
 
-                # and effects
-                if len(chosen_card.get("effects", [])) > 0:
-                    if not chosen_enemy.get('effects'):
-                        chosen_enemy['effects'] = []
-                    for effect in chosen_card.get("effects", []):
-                        if effect not in chosen_enemy['effects']:
-                            chosen_enemy['effects'].append(effect)
+                    # kablamo
+                    if chosen_enemy['hp'] <= 0:
+                        enemies_to_remove.append(chosen_enemy)
+                        SAVE["gold"] += chosen_enemy.get("gold", 0)
+                
+                # boowomp
+                for enemy in enemies_to_remove:
+                    enemies.remove(enemy)
+            else:
+                # normal targetting
+                while targets_remaining > 0 and len(enemies) > 0:
+                    enemy_picker_menu = Menu(
+                        *sorted(str(i + 1) for i in range(len(enemies))),
+                        title=f"Which enemy will you target? ({targets_remaining}/{chosen_card.get('targets', 1)})",
+                        color="bold red",
+                        highlight_color="bold white"
+                    )
+                    chosen_enemy = enemies[int(enemy_picker_menu.ask(screen=False, esc=False))-1]
 
-                targets_remaining -= 1
+                    # apply damage
+                    chosen_enemy['hp'] -= chosen_card.get("damage", 0)
 
-                # kablamo
-                if chosen_enemy['hp'] <= 0:
-                    enemies.remove(chosen_enemy)
-                    SAVE["gold"] += chosen_enemy.get("gold", 0)
+                    # and effects
+                    if len(chosen_card.get("effects", [])) > 0:
+                        if not chosen_enemy.get('effects'):
+                            chosen_enemy['effects'] = []
+                        for effect in chosen_card.get("effects", []):
+                            if effect.get('type') == 'HEAL':
+                                SAVE['hp'] += 5
+                                effect['duration'] -= 1
+                                console.print("You healed 5HP!", style="green")
+                                if effect['duration'] != 0:
+                                    SAVE['effects'].append(effect)
+                            elif effect.get('type') == 'CLEANSE':
+                                console.print("You cleansed yourself, removing all effects!", style="green")
+                                SAVE['effects'] = []
+                            elif effect not in chosen_enemy['effects']:
+                                chosen_enemy['effects'].append(effect)
+
+                    targets_remaining -= 1
+
+                    # kablamo
+                    if chosen_enemy['hp'] <= 0:
+                        enemies.remove(chosen_enemy)
+                        SAVE["gold"] += chosen_enemy.get("gold", 0)
 
             # aw man that was a scroll
             if chosen_card.get("scroll", False):
                 SAVE["hand"].remove(chosen_card)
+
+            # chopped
+            process_enemy_effects(enemies)
 
             # mega kablamo?
             if len(enemies) == 0:
                 console.print("You have defeated all enemies on this floor!", style="bold green")
                 SAVE["floor"] += 1
                 SAVE["tp"] = SAVE.get("max_tp", 2)
+                
+                # save game after each floor
+                save_game(SAVE_PATH)
+                
+                # Check for shops
+                if SAVE["floor"] % 10 == 0:  # voucher shop every 10 floors
+                    voucher_shop()
+                    save_game(SAVE_PATH)  # save after shop
+                elif SAVE["floor"] % 5 == 0:  # scroll shop every 5 floors (not 10)
+                    scroll_shop()
+                    save_game(SAVE_PATH)  # save after shop
+                
                 Prompt.ask("Press Enter to continue...")
                 break  # mega kablamo.
 

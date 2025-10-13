@@ -29,14 +29,14 @@
     },
     {
         "name": "Ember Burst",
-        "description": "Deals 5 damage and inflicts fiery on three targets",
+        "description": "Deals 3 damage and inflicts fiery on three targets",
         "tp": 2,
         "targets": 3,
-        "damage": 5,
+        "damage": 3,
         "effects": [
             {
                 "type": "FIERY",
-                "duration": 2,
+                "duration": 3,
                 "style": "bold white on dark_orange"
             }
         ]

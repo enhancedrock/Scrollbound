@@ -6,6 +6,7 @@
         "targets": 0,
         "damage": 7,
         "scroll": true,
+        "cost": 10,
         "effects": [
             {
                 "type": "FIERY",
@@ -21,6 +22,7 @@
         "targets": 0,
         "damage": 4,
         "scroll": true,
+        "cost": 10,
         "effects": [
             {
                 "type": "WET",
@@ -36,6 +38,7 @@
         "targets": 0,
         "damage": 7,
         "scroll": true,
+        "cost": 15,
         "effects": [
             {
                 "type": "ELECTRIFIED",

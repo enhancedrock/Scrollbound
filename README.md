@@ -7,6 +7,9 @@ scrollbound
 a small roguelike game about descending a dungeon, collecting spell cards and scrolls which you use to defeat enemies
 </p>
 
+## disclaimer
+i wouldn't really consider this game complete, much like my other siege project "coinpon". with this school year being quite a busy one for me, i have a LOT of project work to do AND i'm involved in my school's musical, so i didn't have as much time as i would've liked to to spend on fleshing this out and getting coins
+
 ## how 2 get
 you can play the game locally by cloning the repo (or setting up a codespace by clicking `Code` -> `Codespaces` -> `Create codespace on main`), setting a up virtual environment, installing rich and rich_menu, then running \_\_main\_\_.py
 
@@ -25,4 +28,6 @@ the game automatically saves your run every floor, so you can quit by simply Con
 
 ## wowie
 this is another game by me, on behalf of rockbox studios.
+
+
 i made it for week 6 of hackclub's siege! you should check them out, they do regular, amazing events for young hackers 18 and under with plenty of prizes ;3
