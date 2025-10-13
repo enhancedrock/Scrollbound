@@ -2,6 +2,7 @@
 <img width="75" src="https://raw.githubusercontent.com/enhancedrock/Scrollbound/refs/heads/main/scroll.png" alt="a doodle of a paper scroll">
 
 scrollbound
+
 </h1>
 <p align="center">
 a small roguelike game about descending a dungeon, collecting spell cards and scrolls which you use to defeat enemies
@@ -25,6 +26,9 @@ from there, it's standard turn-based RPG combat, fight enemies using your spells
 every 5 levels you'll encounter a scroll shop, every 10 you'll encounter a voucher shop
 
 the game automatically saves your run every floor, so you can quit by simply Control+C'ing or closing your terminal, and pick back up where you left off whenever
+
+## demo vid
+https://github.com/user-attachments/assets/9cffc3e0-e4a0-43cc-b287-5d8fa7630459
 
 ## wowie
 this is another game by me, on behalf of rockbox studios.
