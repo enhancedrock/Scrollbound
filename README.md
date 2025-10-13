@@ -16,7 +16,9 @@ you can play the game locally by cloning the repo (or setting up a codespace by 
 
 the game was made with python 3.10, so bear that in mind
 
-depending on how much replit has changed since i last used it, i may create a replit demo and drop a link here
+~~depending on how much replit has changed since i last used it, i may create a replit demo and drop a link here~~
+replit has changed such that you cannot just run a replit without forking it first, but if you wish to fork my replit and run it there, you can at:
+https://replit.com/@enhancedrock/Scrollbound
 
 ## how 2 play
 the core gameplay loop is simple and should be familiar if you've ever played a roguelike before! you begin by picking 2 spell cards (these are permanent and won't disappear), and 3 scroll cards (these are single use and disappear), then it's straight into the dungeon for you!
