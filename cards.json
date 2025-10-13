@@ -43,7 +43,7 @@
     },
     {
         "name": "Soothing Mist",
-        "description": "Heals 5HP this turn and the next, and removes one negative effect",
+        "description": "Heals 5HP this turn and the next, and removes all effects",
         "tp": 2,
         "effects": [
             {
