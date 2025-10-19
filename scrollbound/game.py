@@ -4,12 +4,12 @@ import sys
 import json
 import copy
 import random
+from importlib.resources import files
 from pathlib import Path
 from typing import List, Dict, Any
 from rich.console import Console
 from rich.prompt import Prompt
 from rich_menu import Menu
-from importlib.resources import files
 
 NOSAVETODISK = False
 CARDS: List[Dict[str, Any]] = []
