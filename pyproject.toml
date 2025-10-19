@@ -1,6 +1,6 @@
 [project]
 name = "scrollbound"
-version = "1.0.0"
+version = "1.0.1"
 description = "mini-roguelite game about descending a dungeon while fighting monsters with spell and scroll cards"
 readme = "README.md"
 license = { file = "LICENSE" }
