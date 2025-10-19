@@ -11,7 +11,14 @@ requires-python = ">=3.10"
 dependencies = [
     "rich>=13.9.4",
     "rich-menu>=0.3.0",
+    "importlib-resources>=1.3.0;python_version<'3.9'",
 ]
 
 [project.scripts]
-scrollbound = "main:main"
+scrollbound = "scrollbound.game:main"
+
+[tool.setuptools]
+packages = ["scrollbound", "scrollbound.data"]
+
+[tool.setuptools.package-data]
+"scrollbound.data" = ["*.json"]
