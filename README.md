@@ -12,9 +12,7 @@ a small roguelike game about descending a dungeon, collecting spell cards and sc
 i wouldn't really consider this game complete, much like my other siege project "coinpon". with this school year being quite a busy one for me, i have a LOT of project work to do AND i'm involved in my school's musical, so i didn't have as much time as i would've liked to to spend on fleshing this out and getting coins
 
 ## how 2 get
-you can play the game locally by cloning the repo (or setting up a codespace by clicking `Code` -> `Codespaces` -> `Create codespace on main`), setting a up virtual environment, installing rich and rich_menu, then running \_\_main\_\_.py
-
-the game was made with python 3.10, so bear that in mind
+install the project on python 3.10 from [PyPI](https://pypi.org/project/scrollbound/)
 
 ~~depending on how much replit has changed since i last used it, i may create a replit demo and drop a link here~~
 replit has changed such that you cannot just run a replit without forking it first, but if you wish to fork my replit and run it there, you can at:
