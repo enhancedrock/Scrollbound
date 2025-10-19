@@ -1,0 +1,17 @@
+[project]
+name = "scrollbound"
+version = "1.0.0"
+description = "mini-roguelite game about descending a dungeon while fighting monsters with spell and scroll cards"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Ruby", email = "ruby@enhancedrock.tech" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "rich>=13.9.4",
+    "rich-menu>=0.3.0",
+]
+
+[project.scripts]
+scrollbound = "main:main"

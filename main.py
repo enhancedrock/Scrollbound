@@ -1,27 +1,92 @@
-"""main game engine/framework"""
+"""game launcher"""
 import os
+import sys
 import json
-import random
 import copy
+import random
+from pathlib import Path
 from typing import List, Dict, Any
 from rich.console import Console
 from rich.prompt import Prompt
 from rich_menu import Menu
 
+NOSAVETODISK = False
 CARDS: List[Dict[str, Any]] = []
 SCROLLS: List[Dict[str, Any]] = []
 ENEMIES: List[Dict[str, Any]] = []
 SAVE = {}
 SAVE_PATH = ""
 
-with open("cards.json", "r", encoding="utf-8") as cards_json:
-    CARDS = json.load(cards_json)
-with open("scrolls.json", "r", encoding="utf-8") as scrolls_json:
-    SCROLLS = json.load(scrolls_json)
-with open("enemies.json", "r", encoding="utf-8") as enemies_json:
-    ENEMIES = json.load(enemies_json)
-
 console = Console()
+
+def load_game_data():
+    """load cards, scrolls, and enemies from JSON files"""
+    global CARDS, SCROLLS, ENEMIES
+    
+    try:
+        with open("cards.json", "r", encoding="utf-8") as f:
+            CARDS = json.load(f)
+    except FileNotFoundError:
+        console.print("Warning: cards.json not found!", style="bold red")
+    except json.JSONDecodeError as e:
+        console.print(f"Error loading cards.json: {e}", style="bold red")
+    
+    try:
+        with open("scrolls.json", "r", encoding="utf-8") as f:
+            SCROLLS = json.load(f)
+    except FileNotFoundError:
+        console.print("Warning: scrolls.json not found!", style="bold red")
+    except json.JSONDecodeError as e:
+        console.print(f"Error loading scrolls.json: {e}", style="bold red")
+    
+    try:
+        with open("enemies.json", "r", encoding="utf-8") as f:
+            ENEMIES = json.load(f)
+    except FileNotFoundError:
+        console.print("Warning: enemies.json not found!", style="bold red")
+    except json.JSONDecodeError as e:
+        console.print(f"Error loading enemies.json: {e}", style="bold red")
+
+def get_save_directory():
+    """Get the path to the save directory (~/.scrollbound/runs)"""
+    save_dir = Path.home() / ".scrollbound" / "runs"
+    save_dir.mkdir(parents=True, exist_ok=True)
+    return save_dir
+
+TEMPLATESAVE = {
+    "hp": 30,
+    "max_hp": 30,
+    "tp": 2,
+    "max_tp": 2,
+    "gold": 0,
+    "effects": [],
+    "floor": 0,
+    "biome": "cave",
+    "hand": [],
+    "stockpile": []
+}
+
+if NOSAVETODISK:
+    console.print("!! Saving to disk has been disabled in this enviornment !!", style="bold red",
+                  justify="center")
+    mainMenu = Menu(
+        "New Run",
+        "Exit",
+        title="S C R O L L B O U N D",
+        color="bold blue",
+        highlight_color="bold white",
+    )
+else:
+    mainMenu = Menu(
+        "New Run",
+        "Continue Run", 
+        "Exit",
+        title="S C R O L L B O U N D",
+        color="bold blue",
+        highlight_color="bold white",
+    )
+
+load_game_data()
 
 def save_game(savepath: str):
     """Save the current game state"""
@@ -635,4 +700,65 @@ def descend():
                 Prompt.ask("Press Enter to continue...")
                 break  # mega kablamo.
 
-# TODO handle end of turn effects, enemy attacks, scroll shop, voucher shop, etc.
+while True:
+    # console.clear() is finnicky, so try the more robust:
+    result = os.system('cls' if os.name == 'nt' else 'clear')
+    if result != 0:
+        # and if that doesn't work, then we'll use it
+        console.clear()
+
+    selection = mainMenu.ask(screen = False, esc = False)
+    # Handle the selection
+    match selection:
+        case "New Run":
+            BASE = "new-run"
+            NEWRUN = BASE
+            save_dir = get_save_directory()
+            i = 0
+            while (save_dir / f"{NEWRUN}.sbr").exists():
+                i += 1
+                NEWRUN = f"{BASE}-{i}"
+            save_name = Prompt.ask("Enter a name for your run (a-z, A-Z, -, _, 0-9)",
+                                   default=NEWRUN)
+            if not save_name or any(c not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_" for c in save_name):
+                console.print("Invalid save name!", style="bold red")
+                continue
+            save_path = save_dir / f"{save_name}.sbr"
+            if save_path.exists():
+                overwrite = Prompt.ask(f"A save named '{save_name}' already exists. Overwrite? (y/n)",
+                                       choices=["y", "n"], default="n")
+                if overwrite == "n":
+                    continue
+            try:
+                save_data = copy.deepcopy(TEMPLATESAVE)
+                save_data["name"] = save_name
+                with open(save_path, "w", encoding="utf-8") as f:
+                    json.dump(save_data, f, ensure_ascii=False, indent=2)
+            except OSError as e:
+                console.print(f"Failed to create save file: {e}", style="bold red")
+                continue
+            console.print("Starting new run...", style="italic white")
+            entry(str(save_path))
+        case "Continue Run":
+            save_dir = get_save_directory()
+            save_files = [f.stem for f in save_dir.glob("*.sbr")]
+            if not save_files:
+                console.print("No saved runs found!", style="bold red")
+            else:
+                loadSaveMenu = Menu(
+                    *sorted(save_files),
+                    "Back",
+                    title="Select a run to continue",
+                    color="bold blue",
+                    highlight_color="bold white",
+                )
+                selection = loadSaveMenu.ask(screen = False, esc = False)
+
+                if selection == "Back":
+                    continue
+
+                console.print("Starting...", style="italic white")
+                entry(str(save_dir / f"{selection}.sbr"))
+        case "Exit":
+            console.print("Goodbye!", style="italic cyan")
+            sys.exit()
